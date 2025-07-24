@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update Inventory</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="top-bar">
+  <button onclick="location.href='index.html'">Home</button>
+  <button onclick="location.href='form.html'">Update</button>
+</div>
+
+  <h1>Update Stock</h1>
+
+  <form id="inventoryForm">
+    <label>Product Name</label>
+<input type="text" name="product" id="productInput" placeholder="Enter or select product" autocomplete="off" required />
+<div id="suggestions" class="autocomplete-list"></div>
+
+   
+    <label>Your Name</label>
+    <select name="user" required>
+      <option value="">-- Select your name --</option>
+      <option value="Amit">Amit</option>
+      <option value="Sumit">Sumit</option>
+      <option value="Mumtaz">Mumtaz</option>
+      <option value="Lakshmi">Lakshmi</option>
+    
+    </select>
+
+    <label>Date</label>
+    <input type="date" name="date" required />
+
+    <label>Quantity</label>
+    <input type="number" name="quantity" placeholder="Enter quantity" min="1" required />
+
+    <label>Action</label>
+    <label><input type="radio" name="action" value="add" required /> Add to stock</label>
+    <label><input type="radio" name="action" value="take" required /> Take from stock</label>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  
+
+  <script>
+  
+  const productInput = document.getElementById('productInput');
+  const suggestionsBox = document.getElementById('suggestions');
+  let productList = [];
+
+  // Load product list from /data
+  async function fetchProducts() {
+    const res = await fetch('/data');
+    const data = await res.json();
+    productList = Object.keys(data);
+  }
+
+  // Show suggestions
+  function showSuggestions(value) {
+    suggestionsBox.innerHTML = '';
+    if (!value) return;
+
+    const filtered = productList.filter(p =>
+      p.toLowerCase().includes(value.toLowerCase())
+    );
+
+    filtered.forEach(name => {
+      const div = document.createElement('div');
+      div.textContent = name;
+      div.addEventListener('click', () => {
+        productInput.value = name;
+        suggestionsBox.innerHTML = '';
+      });
+      suggestionsBox.appendChild(div);
+    });
+  }
+
+  productInput.addEventListener('input', () => {
+    showSuggestions(productInput.value);
+  });
+
+  productInput.addEventListener('blur', () => {
+    setTimeout(() => suggestionsBox.innerHTML = '', 200); // Delay to allow click
+  });
+
+  // Init
+  let productsLoaded = false;
+
+productInput.addEventListener('input', async () => {
+  if (!productsLoaded) {
+    await fetchProducts();
+    productsLoaded = true;
+  }
+  showSuggestions(productInput.value);
+});
+
+    document.getElementById('inventoryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+
+      data.quantity = parseInt(data.quantity); // Convert to number
+
+      const res = await fetch('/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        alert('Inventory updated!');
+        window.location.href = 'index.html';
+      } else {
+        alert('Error updating inventory.');
+      }
+    });
+  </script>
+</body>
+</html>
