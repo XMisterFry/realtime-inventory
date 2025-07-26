@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const path = require('path');
-
+const auth = require('basic-auth');
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -21,6 +21,20 @@ client.connect().then(() => {
 
   
 });
+const USERNAME = process.env.APP_USER || 'admin';
+const PASSWORD = process.env.APP_PASS || 'secret';
+
+app.use((req, res, next) => {
+  const user = auth(req);
+
+  if (!user || user.name !== USERNAME || user.pass !== PASSWORD) {
+    res.set('WWW-Authenticate', 'Basic realm="Restricted Area"');
+    return res.status(401).send('Access denied');
+  }
+
+  next();
+});
+
 
 // GET inventory
 app.get('/data', async (req, res) => {
