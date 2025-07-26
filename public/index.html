@@ -10,19 +10,28 @@
 
 <body>
   <div class="top-bar">
-    <button onclick="location.href='index.html'">Home</button>
-    <button onclick="location.href='form.html'">Update</button>
+    <button onclick="location.href='index.html'">Check Stock</button>
+    <button onclick="location.href='form.html'">Update Stock</button>
   </div>
 
   <h1>Inventory</h1>
 
   <input type="text" id="search" placeholder="Search item..." />
-
+  <select id="warehouseFilter">
+    <option value="">All Warehouses</option>
+    <option value="Bawana">Bawana</option>
+    <option value="Kucha Rohullah">Kucha Rohullah</option>
+  </select>
+  <div>
+    <button id="sortLowHigh">Sort: Low to High</button>
+    <button id="sortHighLow">Sort: High to Low</button>
+  </div>
   <div id="itemList">
     <div class="item-row header">
       <div class="item-name">Name</div>
       <div class="item-qty">Qty</div>
       <div class="item-date">Last Updated</div>
+     
     </div>
     <div id="loadingRow">Loading...</div>
   </div>
@@ -30,54 +39,106 @@
   <script>
     async function fetchData() {
       const res = await fetch('/data');
-      const data = await res.json();
-      return data;
+      return await res.json();
     }
 
-    function renderList(data, filter = '') {
+    let currentSort = null;
+
+    function renderList(data, filter = '', warehouse = '', sortOrder = null) {
       const list = document.getElementById('itemList');
-      // Keep the header, remove all other rows except header
       const header = list.querySelector('.item-row.header');
       list.innerHTML = '';
       list.appendChild(header);
 
-      let hasRows = false;
-      Object.entries(data).forEach(([name, { quantity, lastUpdated }]) => {
-        if (name.toLowerCase().includes(filter.toLowerCase())) {
-          hasRows = true;
-          const row = document.createElement('div');
-          row.className = 'item-row';
-          row.innerHTML = `
-            <div class="item-name">${name}</div>
-            <div class="item-qty">${quantity}</div>
-            <div class="item-date">${lastUpdated}</div>
-          `;
-          list.appendChild(row);
-        }
-      });
-      if (!hasRows) {
+      // Convert data to array for sorting
+      let items = Object.entries(data).map(([key, value]) => ({ key, ...value }));
+
+      // Filter
+      items = items.filter(item =>
+        item.key.toLowerCase().includes(filter.toLowerCase()) &&
+        (!warehouse || item.warehouse === warehouse)
+      );
+
+      // Sort
+      if (sortOrder === 'asc') {
+        items.sort((a, b) => a.quantity - b.quantity);
+      } else if (sortOrder === 'desc') {
+        items.sort((a, b) => b.quantity - a.quantity);
+      }
+
+      if (items.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'item-row';
-        empty.innerHTML = `<div style="flex:1;text-align:center;" colspan="3">No items found</div>`;
+        empty.innerHTML = `<div style="flex:1;text-align:center;" colspan="4">No items found</div>`;
         list.appendChild(empty);
+        return;
       }
+
+      items.forEach(({ key, quantity, lastUpdated }) => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+      <div class="item-name">${key}</div>
+      <div class="item-qty">${quantity}</div>
+      <div class="item-date">${lastUpdated}</div>
+      
+    `;
+        list.appendChild(row);
+      });
     }
 
-    document.getElementById('search').addEventListener('input', async (e) => {
+    async function initialLoad() {
       document.getElementById('loadingRow').style.display = '';
-      document.getElementById('loadingRow').textContent = 'Loading...';
-      const data = await fetchData();
-      renderList(data, e.target.value);
-      document.getElementById('loadingRow').style.display = 'none';
-    });
-
-    (async () => {
-      document.getElementById('loadingRow').style.display = '';
-      document.getElementById('loadingRow').textContent = 'Loading...';
       const data = await fetchData();
       renderList(data);
       document.getElementById('loadingRow').style.display = 'none';
-    })();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initialLoad();
+
+      document.getElementById('sortLowHigh').addEventListener('click', async () => {
+        currentSort = 'asc';
+        const data = await fetchData();
+        renderList(
+          data,
+          document.getElementById('search').value,
+          document.getElementById('warehouseFilter').value,
+          currentSort
+        );
+      });
+
+      document.getElementById('sortHighLow').addEventListener('click', async () => {
+        currentSort = 'desc';
+        const data = await fetchData();
+        renderList(
+          data,
+          document.getElementById('search').value,
+          document.getElementById('warehouseFilter').value,
+          currentSort
+        );
+      });
+
+      document.getElementById('search').addEventListener('input', async (e) => {
+        const data = await fetchData();
+        renderList(
+          data,
+          e.target.value,
+          document.getElementById('warehouseFilter').value,
+          currentSort
+        );
+      });
+
+      document.getElementById('warehouseFilter').addEventListener('change', async (e) => {
+        const data = await fetchData();
+        renderList(
+          data,
+          document.getElementById('search').value,
+          e.target.value,
+          currentSort
+        );
+      });
+    });
   </script>
 </body>
 

@@ -98,6 +98,26 @@ form select {
   font-size: 1rem;
 }
 
+#quantity,
+form input[type="number"] {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  border: 2px solid #ffd11f;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  background: #fffbe6;
+  box-shadow: 0 2px 8px rgba(255, 221, 31, 0.08);
+  transition: border 0.2s;
+}
+
+#quantity:focus,
+form input[type="number"]:focus {
+  border-color: #ffb300;
+  outline: none;
+  background: #fff8cc;
+}
 form label {
   display: block;
   margin-bottom: 0.5rem;
@@ -111,8 +131,8 @@ form input[type="radio"] {
 form button {
   width: 100%;
   padding: 0.75rem;
-  background: #28a745;
-  color: white;
+  background: rgb(255, 221, 31);
+  color: rgb(0, 0, 0);
   font-size: 1rem;
   border: none;
   border-radius: 6px;
@@ -120,7 +140,7 @@ form button {
 }
 
 form button:hover {
-  background: #218838;
+  background: rgb(255, 221, 31);
 }
 
 .autocomplete-list {
@@ -154,9 +174,9 @@ form button:hover {
   gap: 1rem;
   background-color: rgb(255, 221, 31);
   padding: 12px;
-  border-radius: 12px;
+  
   margin: 10px auto;
-  max-width: 400px;
+  max-width: 600px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -165,7 +185,7 @@ form button:hover {
   color: #ffffff;
   border: none;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 0px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;

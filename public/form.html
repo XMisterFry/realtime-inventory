@@ -1,25 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Update Inventory</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <div class="top-bar">
-  <button onclick="location.href='index.html'">Home</button>
-  <button onclick="location.href='form.html'">Update</button>
-</div>
+    <button onclick="location.href='index.html'">Check Stock</button>
+    <button onclick="location.href='form.html'">Update Stock</button>
+  </div>
 
   <h1>Update Stock</h1>
 
   <form id="inventoryForm">
-    <label>Product Name</label>
-<input type="text" name="product" id="productInput" placeholder="Enter or select product" autocomplete="off" required />
-<div id="suggestions" class="autocomplete-list"></div>
+    <label>Warehouse</label>
+    <select name="warehouse" required>
+      <option value="">-- Select warehouse --</option>
+      <option value="Bawana">Bawana</option>
+      <option value="Kucha Rohullah">Kucha Rohullah</option>
+    </select>
 
-   
+    <label>Product Name</label>
+    <input type="text" name="product" id="productInput" placeholder="Enter or select product" autocomplete="off"
+      required />
+    <div id="suggestions" class="autocomplete-list"></div>
+
+
+
     <label>Your Name</label>
     <select name="user" required>
       <option value="">-- Select your name --</option>
@@ -27,14 +38,18 @@
       <option value="Sumit">Sumit</option>
       <option value="Mumtaz">Mumtaz</option>
       <option value="Lakshmi">Lakshmi</option>
-    
+      <option value="Office">Office</option>
+      <option value="Omar">Omar</option>
+      <option value="Amir">Amir</option>
+
+
     </select>
 
     <label>Date</label>
-    <input type="date" name="date" required />
+    <input type="datetime-local" name="date" required />
 
     <label>Quantity</label>
-    <input type="number" name="quantity" placeholder="Enter quantity" min="1" required />
+    <input type="number" name="quantity" id="quantity" placeholder="Enter quantity" min="1" required />
 
     <label>Action</label>
     <label><input type="radio" name="action" value="add" required /> Add to stock</label>
@@ -43,27 +58,46 @@
     <button type="submit">Submit</button>
   </form>
 
-  
 
-  <script>
-  
+
+
+
+
+
+ <script>
   const productInput = document.getElementById('productInput');
   const suggestionsBox = document.getElementById('suggestions');
-  let productList = [];
+  const warehouseSelect = document.querySelector('select[name="warehouse"]');
 
-  // Load product list from /data
-  async function fetchProducts() {
+  let warehouseProductMap = {};
+
+  // Load product list from /data and organize by warehouse
+  async function fetchProductsByWarehouse() {
     const res = await fetch('/data');
     const data = await res.json();
-    productList = Object.keys(data);
+    warehouseProductMap = {};
+    Object.values(data).forEach(item => {
+      if (!warehouseProductMap[item.warehouse]) {
+        warehouseProductMap[item.warehouse] = [];
+      }
+      // Avoid duplicates
+      const productName = item.product || item.key || '';
+if (productName && !warehouseProductMap[item.warehouse].includes(productName)) {
+  warehouseProductMap[item.warehouse].push(productName);
+}
+    });
   }
 
-  // Show suggestions
+  // Show suggestions for the selected warehouse
   function showSuggestions(value) {
     suggestionsBox.innerHTML = '';
     if (!value) return;
 
-    const filtered = productList.filter(p =>
+    const warehouse = warehouseSelect.value;
+    if (!warehouse) return;
+
+    const filteredList = warehouseProductMap[warehouse] || [];
+    const filtered = filteredList.filter(p =>
       p.toLowerCase().includes(value.toLowerCase())
     );
 
@@ -78,45 +112,50 @@
     });
   }
 
+  // When warehouse changes, clear product input and suggestions, and fetch products
+  warehouseSelect.addEventListener('change', async () => {
+    productInput.value = '';
+    suggestionsBox.innerHTML = '';
+    await fetchProductsByWarehouse();
+  });
+
+  // When typing, show suggestions for current warehouse
   productInput.addEventListener('input', () => {
     showSuggestions(productInput.value);
   });
 
+  // Hide suggestions when input loses focus (with slight delay for click)
   productInput.addEventListener('blur', () => {
-    setTimeout(() => suggestionsBox.innerHTML = '', 200); // Delay to allow click
+    setTimeout(() => suggestionsBox.innerHTML = '', 200);
   });
 
-  // Init
-  let productsLoaded = false;
+  // Initial fetch on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    await fetchProductsByWarehouse();
+  });
 
-productInput.addEventListener('input', async () => {
-  if (!productsLoaded) {
-    await fetchProducts();
-    productsLoaded = true;
-  }
-  showSuggestions(productInput.value);
-});
+  // Form submit logic
+  document.getElementById('inventoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
 
-    document.getElementById('inventoryForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
+    data.quantity = parseInt(data.quantity); // Convert to number
 
-      data.quantity = parseInt(data.quantity); // Convert to number
-
-      const res = await fetch('/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        alert('Inventory updated!');
-        window.location.href = 'index.html';
-      } else {
-        alert('Error updating inventory.');
-      }
+    const res = await fetch('/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
-  </script>
+
+    if (res.ok) {
+      alert('Inventory updated!');
+      window.location.href = 'index.html';
+    } else {
+      alert('Error updating inventory.');
+    }
+  });
+</script>
 </body>
+
 </html>

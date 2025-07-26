@@ -27,9 +27,13 @@ app.get('/data', async (req, res) => {
     const items = await inventoryCollection.find().toArray();
     const response = {};
     items.forEach(item => {
-      response[item.product] = {
+      // Key by product and warehouse for uniqueness
+      const key = `${item.product} (${item.warehouse})`;
+      response[key] = {
+        product: item.product,
         quantity: item.quantity,
         lastUpdated: item.lastUpdated,
+        warehouse: item.warehouse,
       };
     });
     res.json(response);
@@ -40,15 +44,15 @@ app.get('/data', async (req, res) => {
 
 // POST update
 app.post('/update', async (req, res) => {
-  const { product, user, date, action, quantity } = req.body;
+  const { product, user, date, action, quantity, warehouse } = req.body;
   const qty = parseInt(quantity);
 
-  if (!product || !user || !date || !action || isNaN(qty) || qty <= 0) {
+  if (!product || !user || !date || !action || !warehouse || isNaN(qty) || qty <= 0) {
     return res.status(400).json({ error: 'Invalid input' });
   }
 
   try {
-    const item = await inventoryCollection.findOne({ product });
+    const item = await inventoryCollection.findOne({ product, warehouse });
 
     let newQty = qty;
     if (item) {
@@ -56,13 +60,14 @@ app.post('/update', async (req, res) => {
       if (newQty < 0) newQty = 0;
 
       await inventoryCollection.updateOne(
-        { product },
+        { product, warehouse },
         { $set: { quantity: newQty, lastUpdated: date } }
       );
     } else {
       if (action === 'take') newQty = 0;
       await inventoryCollection.insertOne({
         product,
+        warehouse,
         quantity: newQty,
         lastUpdated: date,
       });
