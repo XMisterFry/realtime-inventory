@@ -8,13 +8,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 const client = new MongoClient(process.env.MONGO_URI);
+let db;
 let inventoryCollection;
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
 
 client.connect().then(() => {
-  const db = client.db('factoryDB');
+  db = client.db('factoryDB');
   inventoryCollection = db.collection('inventory');
   console.log('✅ Connected to MongoDB');
 
@@ -44,7 +45,7 @@ app.get('/data', async (req, res) => {
 
 // POST update
 app.post('/update', async (req, res) => {
-  const { product, user, date, action, quantity, warehouse } = req.body;
+  const { product, user, date, action, quantity, warehouse, remarks } = req.body;
   const qty = parseInt(quantity);
 
   if (!product || !user || !date || !action || !warehouse || isNaN(qty) || qty <= 0) {
@@ -73,9 +74,34 @@ app.post('/update', async (req, res) => {
       });
     }
 
+    // Add to stock_ledger
+    await db.collection('stock_ledger').insertOne({
+  product,
+  warehouse,
+  action,
+  quantity: qty,
+  user,
+  date,
+  remarks: remarks || '',
+});
+
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update inventory' });
+  }
+});
+
+app.get('/ledger', async (req, res) => {
+  const { product, warehouse } = req.query;
+  try {
+    const ledger = await db.collection('stock_ledger')
+      .find({ product, warehouse })
+      .sort({ date: 1 })
+      .toArray();
+    res.json(ledger);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch ledger' });
   }
 });
 

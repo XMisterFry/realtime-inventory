@@ -98,16 +98,35 @@ form select {
   font-size: 1rem;
 }
 
+form textarea {
+  width: 100%;
+  padding: 0.7rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 48px;
+  background: #f9f9f9;
+  transition: border 0.2s;
+}
+
+form textarea:focus {
+  border-color: #f9f9f9;
+  background: #f9f9f9;
+  outline: none;
+}
+
 #quantity,
 form input[type="number"] {
   width: 100%;
   padding: 0.9rem 1rem;
   margin-bottom: 1rem;
-  margin-top: 1rem;
-  border: 2px solid #ffd11f;
+ 
+  border: 2px solid #f9f9f9;
   border-radius: 8px;
   font-size: 1.2rem;
-  background: #fffbe6;
+  background: #f9f9f9;
   box-shadow: 0 2px 8px rgba(255, 221, 31, 0.08);
   transition: border 0.2s;
 }
@@ -122,6 +141,7 @@ form label {
   display: block;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
+  margin-top: 0.5rem;
 }
 
 form input[type="radio"] {
@@ -196,4 +216,83 @@ form button:hover {
 .top-bar button:hover {
   background-color: #000000;
   transform: scale(1.05);
+}
+
+/* ...existing styles... */
+
+/* Ledger Table Styles */
+#ledgerTable table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.98rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+#ledgerTable th, #ledgerTable td {
+  padding: 0.7rem 0.4rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+  word-break: break-word;
+}
+
+#ledgerTable th {
+  background: #fffbe6;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #b38f00;
+}
+
+#ledgerTable tr:last-child td {
+  border-bottom: none;
+}
+
+#ledgerTable tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+#ledgerTable td {
+  font-size: 0.97rem;
+}
+
+@media (max-width: 600px) {
+  #ledgerTable table, #ledgerTable thead, #ledgerTable tbody, #ledgerTable th, #ledgerTable td, #ledgerTable tr {
+    display: block;
+    width: 100%;
+  }
+  #ledgerTable tr {
+    margin-bottom: 0.7rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    background: #fff;
+    padding: 0.5rem 0.2rem;
+  }
+  #ledgerTable th {
+    display: none;
+  }
+  #ledgerTable td {
+    border: none;
+    position: relative;
+    padding-left: 45%;
+    min-height: 2.2em;
+  }
+  #ledgerTable td:before {
+    position: absolute;
+    left: 0.7rem;
+    top: 0;
+    width: 40%;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #b38f00;
+    font-size: 0.97rem;
+  }
+  #ledgerTable td:nth-child(1):before { content: "Date/Time"; }
+  #ledgerTable td:nth-child(2):before { content: "User"; }
+  #ledgerTable td:nth-child(3):before { content: "Action"; }
+  #ledgerTable td:nth-child(4):before { content: "Remarks"; }
+  #ledgerTable td:nth-child(5):before { content: "Quantity"; }
+  #ledgerTable td:nth-child(6):before { content: "Balance"; }
 }

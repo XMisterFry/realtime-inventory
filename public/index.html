@@ -74,25 +74,41 @@
         return;
       }
 
-      items.forEach(({ key, quantity, lastUpdated }) => {
+      items.forEach(({ key, quantity, lastUpdated, product,warehouse }) => {
         const row = document.createElement('div');
         row.className = 'item-row';
         row.innerHTML = `
       <div class="item-name">${key}</div>
       <div class="item-qty">${quantity}</div>
       <div class="item-date">${lastUpdated}</div>
+      <div>
+      <button class="view-ledger-btn" 
+        data-product="${product || key.split(' (')[0]}" 
+        data-warehouse="${warehouse}">
+        View
+      </button>
+    </div>
       
     `;
         list.appendChild(row);
       });
     }
 
+    document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('view-ledger-btn')) {
+    const product = e.target.getAttribute('data-product');
+    const warehouse = e.target.getAttribute('data-warehouse');
+    window.open(`ledger.html?product=${encodeURIComponent(product)}&warehouse=${encodeURIComponent(warehouse)}`, '_blank');
+  }
+});
+
     async function initialLoad() {
-      document.getElementById('loadingRow').style.display = '';
-      const data = await fetchData();
-      renderList(data);
-      document.getElementById('loadingRow').style.display = 'none';
-    }
+  const loadingRow = document.getElementById('loadingRow');
+  if (loadingRow) loadingRow.style.display = '';
+  const data = await fetchData();
+  renderList(data);
+  if (loadingRow) loadingRow.style.display = 'none';
+}
 
     document.addEventListener('DOMContentLoaded', () => {
       initialLoad();

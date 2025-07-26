@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ledger</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="top-bar">
+    <button onclick="window.close()">Close</button>
+  </div>
+  <h1>Ledger</h1>
+  <div id="ledgerTable"></div>
+  <script>
+    async function fetchLedger(product, warehouse) {
+      const res = await fetch(`/ledger?product=${encodeURIComponent(product)}&warehouse=${encodeURIComponent(warehouse)}`);
+      return await res.json();
+    }
+
+    function renderLedgerTable(entries) {
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr>
+          <th>Date/Time</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Remarks</th>
+          <th>Quantity</th>
+          <th>Balance</th>
+        </tr>
+      `;
+      let balance = 0;
+      entries.forEach(entry => {
+        if (entry.action === 'add') balance += entry.quantity;
+        else if (entry.action === 'take') balance -= entry.quantity;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${entry.date}</td>
+          <td>${entry.user}</td>
+          <td>${entry.action}</td>
+          <td>${entry.remarks || ''}</td>
+          <td>${entry.quantity}</td>
+          <td>${balance}</td>
+        `;
+        table.appendChild(row);
+      });
+      document.getElementById('ledgerTable').appendChild(table);
+    }
+
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const product = params.get('product');
+      const warehouse = params.get('warehouse');
+      const entries = await fetchLedger(product, warehouse);
+      renderLedgerTable(entries);
+    })();
+  </script>
+</body>
+</html>
